@@ -10,6 +10,10 @@ class Master(object):
     def communicate(self, conn):
         while True:
             # Read a message on the socket.
+            print('{} idle workers; {} tasks queued; {} active'.format(
+                len(self.idle_workers), len(self.queued_tasks),
+                len(self.active_tasks)
+            ))
             msg = yield cw._readmsg(conn)
             if msg is None:
                 break
