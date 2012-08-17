@@ -17,11 +17,12 @@ class Worker(object):
                 msg = yield cw._readmsg(conn)
                 assert isinstance(msg, cw.TaskMessage)
 
-                print('got a task!')
+                print('got a task')
                 # TODO exception handling
                 res = msg.func(*msg.args, **msg.kwargs)
                 response = cw.ResultMessage(msg.jobid, res)
                 yield cw._sendmsg(conn, response)
+                print('sent response')
 
         finally:
             yield cw._sendmsg(conn, cw.WorkerDepartMessage())
