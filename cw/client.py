@@ -39,14 +39,35 @@ class ClientThread(threading.Thread, Client):
         self.ready_condition = threading.Condition()
         self.ready = False
 
+        self.shutdown = False
+        self.shutdown_lock = threading.Lock()
+
     def connection_ready(self):
         with self.ready_condition:
             self.ready = True
             self.ready_condition.notify_all()
 
+    def main_coro(self):
+        handler = self.handle_results(self.callback)
+        yield bluelet.spawn(handler)
+        
+        # Poll for thread shutdown.
+        while True:
+            yield bluelet.sleep(1)
+            with self.shutdown_lock:
+                if self.shutdown:
+                    break
+
+        # Halt the handler thread.
+        yield bluelet.kill(handler)
+    
+    def stop(self):
+        with self.shutdown_lock:
+            self.shutdown = True
+
     def run(self):
         # Receive on the socket in this thread.
-        bluelet.run(self.handle_results(self.callback))
+        bluelet.run(self.main_coro())
 
     def start_job(self, jobid, func, *args, **kwargs):
         # Synchronously send on the socket in the *calling* thread.
@@ -99,7 +120,8 @@ class ClusterExecutor(concurrent.futures.Executor):
                 if self.futures:
                     self.jobs_empty_cond.wait()
 
-        #FIXME stop thread
+        self.thread.stop()
+        self.thread.join()
 
 def test():
     def square(n):
