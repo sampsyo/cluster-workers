@@ -126,7 +126,7 @@ class ClusterExecutor(concurrent.futures.Executor):
 
 def test():
     def square(n):
-        return n * n, os.getcwd()
+        return n * n
 
     with ClusterExecutor() as executor:
         for res in executor.map(square, range(10)):
