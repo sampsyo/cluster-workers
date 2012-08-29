@@ -1,3 +1,4 @@
+from __future__ import print_function
 import cw
 import bluelet
 import traceback
@@ -27,10 +28,15 @@ class Worker(object):
 
         yield cw._sendmsg(conn, cw.WorkerRegisterMessage())
 
+        connected = True
         try:
             while True:
                 # Get a task from the master.
                 msg = yield cw._readmsg(conn)
+                if msg is None:
+                    print('connection to master closed')
+                    connected = False
+                    break
                 assert isinstance(msg, cw.TaskMessage)
 
                 try:
@@ -44,7 +50,8 @@ class Worker(object):
                 yield cw._sendmsg(conn, response)
 
         finally:
-            yield cw._sendmsg(conn, cw.WorkerDepartMessage())
+            if connected:
+                yield cw._sendmsg(conn, cw.WorkerDepartMessage())
 
     def run(self):
         try:
