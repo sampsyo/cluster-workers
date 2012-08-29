@@ -42,9 +42,7 @@ class MasterThread(threading.Thread):
         self.daemon = True
 
     def run(self):
-        print('master beginning')
         cw.master.Master().run()
-        print('master exited')
 
 def start(workers):
     host = subprocess.check_output("hostname").strip()
@@ -67,7 +65,8 @@ def start(workers):
         pass
     finally:
         print('stopping slurm job', jobid)
-        subprocess.check_output(['scancel', str(jobid)])
+        subprocess.check_output(['scancel', '--signal=INT', str(jobid)])
+        time.sleep(1)
 
 if __name__ == '__main__':
     args = sys.argv[1:]
