@@ -45,4 +45,11 @@ class Worker(object):
             pass
 
 if __name__ == '__main__':
-    Worker().run()
+    args = sys.argv[1:]
+
+    if args:
+        host = args.pop()
+    else:
+        host = 'localhost'
+
+    Worker().run(host)
