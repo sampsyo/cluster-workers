@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-
 from __future__ import print_function
 import re
 import os
@@ -7,6 +6,8 @@ import tempfile
 import subprocess
 import sys
 import cw.master
+import threading
+import time
 
 def sbatch(job):
     """Submits a Slurm job represented as a sbatch script string. Returns
@@ -24,7 +25,7 @@ def sbatch(job):
     return int(jobid)
 
 def start_workers(host, num=2):
-    command = "sleep 2 ; {} -m cw.worker".format(sys.executable, host)
+    command = "{} -m cw.worker {}".format(sys.executable, host)
     name = "cworkers"
     script_lines = [
         "#!/bin/sh",
@@ -33,14 +34,33 @@ def start_workers(host, num=2):
     ]
     return sbatch('\n'.join(script_lines))
 
+class MasterThread(threading.Thread):
+    def __init__(self):
+        super(MasterThread, self).__init__()
+        self.daemon = True
+
+    def run(self):
+        print('master beginning')
+        cw.master.Master().run()
+        print('master exited')
+
 def main():
     host = subprocess.check_output("hostname").strip()
     print('cluster-workers starting from', host)
+
+    print('starting master thread')
+    thread = MasterThread()
+    thread.start()
+    time.sleep(1)  # Wait for listening socket to be ready.
+
+    print('starting worker job')
     jobid = start_workers(host)
     print('worker job', jobid, 'started')
 
     try:
-        cw.master.Master().run()
+        # Block indefinitely.
+        while True:
+            time.sleep(60)
     except KeyboardInterrupt:
         pass
     finally:
