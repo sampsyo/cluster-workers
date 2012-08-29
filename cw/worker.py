@@ -2,11 +2,20 @@ import cw
 import bluelet
 import traceback
 import sys
+import os
+from contextlib import contextmanager
 
 def format_remote_exc():
     typ, value, tb = sys.exc_info()
     tb = tb.tb_next  # Remove root call to worker().
     return ''.join(traceback.format_exception(typ, value, tb))
+
+@contextmanager
+def chdir(d):
+    olddir = os.getcwd()
+    os.chdir(d)
+    yield
+    os.chdir(olddir)
 
 class Worker(object):
     def __init__(self, host='localhost', port=cw.PORT):
@@ -26,7 +35,8 @@ class Worker(object):
 
                 print('got a task')
                 try:
-                    res = msg.func(*msg.args, **msg.kwargs)
+                    with chdir(msg.cwd):
+                        res = msg.func(*msg.args, **msg.kwargs)
                 except:
                     res = format_remote_exc()
                     response = cw.ResultMessage(msg.jobid, False, res)

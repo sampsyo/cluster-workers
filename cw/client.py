@@ -3,6 +3,7 @@ import cw
 import bluelet
 import threading
 import concurrent.futures
+import os
 
 class Client(object):
     def __init__(self, host='localhost', port=cw.PORT):
@@ -26,7 +27,7 @@ class Client(object):
             callback(result.jobid, result.success, result.result)
 
     def send_job(self, jobid, func, *args, **kwargs):
-        task = cw.TaskMessage(jobid, func, args, kwargs)
+        task = cw.TaskMessage(jobid, func, args, kwargs, os.getcwd())
         yield cw._sendmsg(self.conn, task)
 
 class ClientThread(threading.Thread, Client):
@@ -125,7 +126,7 @@ class ClusterExecutor(concurrent.futures.Executor):
 
 def test():
     def square(n):
-        return n * n
+        return n * n, os.getcwd()
 
     with ClusterExecutor() as executor:
         for res in executor.map(square, range(10)):

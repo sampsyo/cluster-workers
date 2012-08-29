@@ -8,7 +8,8 @@ PORT = 5494
 # Some random bytes to separate messages.
 SENTINEL = b'\x8d\xa9 \xee\x01\xe6B\xec\xaa\n\xe1A:\x15\x8d\x1b'
 
-TaskMessage = namedtuple('TaskMessage', ['jobid', 'func', 'args', 'kwargs'])
+TaskMessage = namedtuple('TaskMessage',
+                         ['jobid', 'func', 'args', 'kwargs', 'cwd'])
 ResultMessage = namedtuple('ResultMessage', ['jobid', 'success', 'result'])
 class WorkerRegisterMessage(object):
     pass
