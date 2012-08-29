@@ -1,6 +1,8 @@
 from collections import namedtuple
 from cloud import serialization
 import bluelet
+import string
+import random
 
 PORT = 5494
 # Some random bytes to separate messages.
@@ -23,3 +25,6 @@ def _readmsg(conn):
     data = data[:-len(SENTINEL)]
     obj = serialization.deserialize(data)
     yield bluelet.end(obj)
+
+def random_string(length=32, chars=(string.ascii_letters + string.digits)):
+    return ''.join(random.choice(chars) for i in range(length))
