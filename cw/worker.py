@@ -52,4 +52,4 @@ if __name__ == '__main__':
     else:
         host = 'localhost'
 
-    Worker().run(host)
+    Worker(host).run()

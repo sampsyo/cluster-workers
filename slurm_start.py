@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 from __future__ import print_function
 import re
 import os
@@ -14,7 +16,7 @@ def sbatch(job):
     jobfile.write(job)
     jobfile.close()
     try:
-        out = subprocess.check_output(['sbatch', jobfile])
+        out = subprocess.check_output(['sbatch', jobfile.name])
     finally:
         os.unlink(jobfile.name)
 
@@ -22,10 +24,11 @@ def sbatch(job):
     return int(jobid)
 
 def start_workers(host, num=2):
-    command = "{} -m cw.worker".format(sys.executable, host)
+    command = "sleep 2 ; {} -m cw.worker".format(sys.executable, host)
+    name = "cworkers"
     script_lines = [
         "#!/bin/sh",
-        "#SBATCH --nodes={}".format(num),
+        "#SBATCH --nodes={} --job-name={}".format(num, name),
         "srun {}".format(command),
     ]
     return sbatch('\n'.join(script_lines))
@@ -43,3 +46,6 @@ def main():
     finally:
         print('stopping slurm job', jobid)
         subprocess.check_output(['scancel', str(jobid)])
+
+if __name__ == '__main__':
+    main()
