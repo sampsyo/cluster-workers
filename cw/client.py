@@ -23,7 +23,7 @@ class Client(object):
                 return
             assert isinstance(result, cw.ResultMessage)
 
-            callback(result.jobid, result.result)
+            callback(result.jobid, result.success, result.result)
 
     def send_job(self, jobid, func, *args, **kwargs):
         task = cw.TaskMessage(jobid, func, args, kwargs)
@@ -55,6 +55,13 @@ class ClientThread(threading.Thread, Client):
                 self.ready_condition.wait()
         bluelet.run(self.send_job(jobid, func, *args, **kwargs))
 
+class RemoteException(Exception):
+    def __init__(self, error):
+        self.error = error
+
+    def __str__(self):
+        return '\n' + self.error.strip()
+
 class ClusterExecutor(concurrent.futures.Executor):
     def __init__(self, host='localhost', port=cw.PORT):
         self.thread = ClientThread(self._completion, host, port)
@@ -65,14 +72,16 @@ class ClusterExecutor(concurrent.futures.Executor):
         self.jobs_lock = threading.Lock()
         self.jobs_empty_cond = threading.Condition(self.jobs_lock)
 
-    def _completion(self, jobid, result):
+    def _completion(self, jobid, success, result):
         with self.jobs_lock:
             future = self.futures.pop(jobid)
             if not self.futures:
                 self.jobs_empty_cond.notify_all()
 
-        # FIXME exceptions
-        future.set_result(result)
+        if success:
+            future.set_result(result)
+        else:
+            future.set_exception(RemoteException(result))
 
     def submit(self, func, *args, **kwargs):
         future = concurrent.futures.Future()

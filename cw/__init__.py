@@ -9,7 +9,7 @@ PORT = 5494
 SENTINEL = b'\x8d\xa9 \xee\x01\xe6B\xec\xaa\n\xe1A:\x15\x8d\x1b'
 
 TaskMessage = namedtuple('TaskMessage', ['jobid', 'func', 'args', 'kwargs'])
-ResultMessage = namedtuple('ResultMessage', ['jobid', 'result'])
+ResultMessage = namedtuple('ResultMessage', ['jobid', 'success', 'result'])
 class WorkerRegisterMessage(object):
     pass
 class WorkerDepartMessage(object):

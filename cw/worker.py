@@ -1,5 +1,12 @@
 import cw
 import bluelet
+import traceback
+import sys
+
+def format_remote_exc():
+    typ, value, tb = sys.exc_info()
+    tb = tb.tb_next  # Remove root call to worker().
+    return ''.join(traceback.format_exception(typ, value, tb))
 
 class Worker(object):
     def __init__(self, host='localhost', port=cw.PORT):
@@ -18,9 +25,13 @@ class Worker(object):
                 assert isinstance(msg, cw.TaskMessage)
 
                 print('got a task')
-                # TODO exception handling
-                res = msg.func(*msg.args, **msg.kwargs)
-                response = cw.ResultMessage(msg.jobid, res)
+                try:
+                    res = msg.func(*msg.args, **msg.kwargs)
+                except:
+                    res = format_remote_exc()
+                    response = cw.ResultMessage(msg.jobid, False, res)
+                else:
+                    response = cw.ResultMessage(msg.jobid, True, res)
                 yield cw._sendmsg(conn, response)
                 print('sent response')
 
