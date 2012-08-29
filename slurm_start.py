@@ -9,6 +9,8 @@ import cw.master
 import threading
 import time
 
+DEFAULT_WORKERS = 16
+
 def sbatch(job):
     """Submits a Slurm job represented as a sbatch script string. Returns
     the job ID.
@@ -44,7 +46,7 @@ class MasterThread(threading.Thread):
         cw.master.Master().run()
         print('master exited')
 
-def main():
+def start(workers):
     host = subprocess.check_output("hostname").strip()
     print('cluster-workers starting from', host)
 
@@ -54,7 +56,7 @@ def main():
     time.sleep(1)  # Wait for listening socket to be ready.
 
     print('starting worker job')
-    jobid = start_workers(host)
+    jobid = start_workers(host, workers)
     print('worker job', jobid, 'started')
 
     try:
@@ -68,4 +70,9 @@ def main():
         subprocess.check_output(['scancel', str(jobid)])
 
 if __name__ == '__main__':
-    main()
+    args = sys.argv[1:]
+    if args:
+        num = int(args.pop())
+    else:
+        num = DEFAULT_WORKERS
+    start(num)
