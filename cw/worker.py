@@ -33,7 +33,6 @@ class Worker(object):
                 msg = yield cw._readmsg(conn)
                 assert isinstance(msg, cw.TaskMessage)
 
-                print('got a task')
                 try:
                     with chdir(msg.cwd):
                         res = msg.func(*msg.args, **msg.kwargs)
@@ -43,7 +42,6 @@ class Worker(object):
                 else:
                     response = cw.ResultMessage(msg.jobid, True, res)
                 yield cw._sendmsg(conn, response)
-                print('sent response')
 
         finally:
             yield cw._sendmsg(conn, cw.WorkerDepartMessage())
