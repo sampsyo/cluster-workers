@@ -1,3 +1,4 @@
+from __future__ import print_function
 import cw
 import bluelet
 
@@ -6,6 +7,9 @@ class Master(object):
         self.queued_tasks = []  # (TaskMessage, client connection) pairs
         self.idle_workers = []  # connections
         self.active_tasks = {}  # {jobid: client connection}
+
+    def _show_workers(self):
+        print('workers:', len(self.idle_workers) + len(self.active_tasks))
 
     def communicate(self, conn):
         while True:
@@ -22,8 +26,10 @@ class Master(object):
                 yield cw._sendmsg(client, msg)
             elif isinstance(msg, cw.WorkerRegisterMessage):
                 self.idle_workers.append(conn)
+                self._show_workers()
             elif isinstance(msg, cw.WorkerDepartMessage):
                 self.idle_workers.remove(conn)
+                self._show_workers()
             else:
                 assert False
 
