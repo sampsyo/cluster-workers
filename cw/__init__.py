@@ -3,29 +3,75 @@ from cloud import serialization
 import bluelet
 import string
 import random
+import marshal
 
 PORT = 5494
 # Some random bytes to separate messages.
 SENTINEL = b'\x8d\xa9 \xee\x01\xe6B\xec\xaa\n\xe1A:\x15\x8d\x1b'
 
-TaskMessage = namedtuple('TaskMessage',
-                         ['jobid', 'func', 'args', 'kwargs', 'cwd'])
+
+# Utilities.
+
+def random_string(length=32, chars=(string.ascii_letters + string.digits)):
+    return ''.join(random.choice(chars) for i in range(length))
+
+
+# Function serialization.
+
+# Represents a delayed function call with all its components. This is
+# separate from a TaskMessage so that it does not need to be
+# unpacked/repacked on the master -- only the metadata needs that.
+Call = namedtuple('Call', ['func', 'args', 'kwargs', 'cwd'])
+
+def call_ser(call):
+    """Serialize a Call to an opaque binary blob."""
+    return serialization.serialize(call, True)
+
+def call_deser(blob):
+    """Deserialize a Call from a blob."""
+    return serialization.deserialize(blob)
+
+
+# Messages.
+
+TaskMessage = namedtuple('TaskMessage', ['jobid', 'call_blob'])
+
 ResultMessage = namedtuple('ResultMessage', ['jobid', 'success', 'result'])
+
 class WorkerRegisterMessage(object):
     pass
+
 class WorkerDepartMessage(object):
     pass
 
+
+# Fast serialization for messages & coroutines for sending/receiving.
+
+def _msg_ser(msg):
+    typename = type(msg).__name__
+    if type(msg) in (WorkerRegisterMessage, WorkerDepartMessage):
+        return typename
+    elif isinstance(msg, (TaskMessage, ResultMessage)):
+        return marshal.dumps((typename, tuple(msg)))
+    else:
+        assert False
+
+def _msg_deser(text):
+    if text in (WorkerRegisterMessage.__name__, WorkerDepartMessage.__name__):
+        typ = globals()[text]
+        return typ()
+    else:
+        typename, vals = marshal.loads(text)
+        typ = globals()[typename]
+        return typ(*vals)
+
 def _sendmsg(conn, obj):
-    yield conn.sendall(serialization.serialize(obj, True) + SENTINEL)
+    yield conn.sendall(_msg_ser(obj) + SENTINEL)
 
 def _readmsg(conn):
     data = yield conn.readline(SENTINEL)
     if SENTINEL not in data:
         yield bluelet.end()  # Socket closed.
     data = data[:-len(SENTINEL)]
-    obj = serialization.deserialize(data)
+    obj = _msg_deser(data)
     yield bluelet.end(obj)
-
-def random_string(length=32, chars=(string.ascii_letters + string.digits)):
-    return ''.join(random.choice(chars) for i in range(length))

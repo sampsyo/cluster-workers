@@ -27,7 +27,8 @@ class Client(object):
             callback(result.jobid, result.success, result.result)
 
     def send_job(self, jobid, func, *args, **kwargs):
-        task = cw.TaskMessage(jobid, func, args, kwargs, os.getcwd())
+        call = cw.Call(func, args, kwargs, os.getcwd())
+        task = cw.TaskMessage(jobid, cw.call_ser(call))
         yield cw._sendmsg(self.conn, task)
 
 class ClientThread(threading.Thread, Client):
@@ -129,7 +130,7 @@ def test():
         return n * n
 
     with ClusterExecutor() as executor:
-        for res in executor.map(square, range(10)):
+        for res in executor.map(square, range(1000)):
             print(res)
 
 if __name__ == '__main__':
