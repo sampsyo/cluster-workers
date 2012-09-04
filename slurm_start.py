@@ -57,7 +57,6 @@ def start(workers, host=None, master=False):
         time.sleep(1)  # Wait for listening socket to be ready.
 
     print('starting worker job')
-    sys.exit(1)
     jobid = start_workers(host, workers)
     print('worker job', jobid, 'started')
 
