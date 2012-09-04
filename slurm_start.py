@@ -8,6 +8,7 @@ import sys
 import cw.master
 import threading
 import time
+import argparse
 
 DEFAULT_WORKERS = 16
 
@@ -44,34 +45,52 @@ class MasterThread(threading.Thread):
     def run(self):
         cw.master.Master().run()
 
-def start(workers):
-    host = subprocess.check_output("hostname").strip()
-    print('cluster-workers starting from', host)
+def start(workers, host=None, master=False):
+    if host is None:
+        host = subprocess.check_output("hostname").strip()
+    print('starting {} workers for master {}'.format(workers, host))
 
-    print('starting master thread')
-    thread = MasterThread()
-    thread.start()
-    time.sleep(1)  # Wait for listening socket to be ready.
+    if master:
+        print('starting master thread')
+        thread = MasterThread()
+        thread.start()
+        time.sleep(1)  # Wait for listening socket to be ready.
 
     print('starting worker job')
+    sys.exit(1)
     jobid = start_workers(host, workers)
     print('worker job', jobid, 'started')
 
-    try:
-        # Block indefinitely.
-        while True:
-            time.sleep(60)
-    except KeyboardInterrupt:
-        pass
-    finally:
-        print('stopping slurm job', jobid)
-        subprocess.check_output(['scancel', '--signal=INT', str(jobid)])
-        time.sleep(1)
+    if master:
+        try:
+            # Block indefinitely.
+            while True:
+                time.sleep(60)
+        except KeyboardInterrupt:
+            pass
+        finally:
+            print('stopping slurm job', jobid)
+            subprocess.check_output(['scancel', '--signal=INT', str(jobid)])
+            time.sleep(1)
+
+def cli():
+    parser = argparse.ArgumentParser(
+        description='start Python workers on a Slurm cluster'
+    )
+    parser.add_argument(
+        'workers', metavar='N', type=int, nargs='?', default=DEFAULT_WORKERS,
+        help='number of workers to start (default {})'.format(DEFAULT_WORKERS)
+    )
+    parser.add_argument(
+        '-m', dest='host', metavar='HOST', type=str,
+        help='master hostname (default this host)'
+    )
+    parser.add_argument(
+        '-M', dest='master', action='store_true',
+        help='block and run master too'
+    )
+    args = parser.parse_args()
+    start(args.workers, args.host, args.master)
 
 if __name__ == '__main__':
-    args = sys.argv[1:]
-    if args:
-        num = int(args.pop())
-    else:
-        num = DEFAULT_WORKERS
-    start(num)
+    cli()
