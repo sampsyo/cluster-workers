@@ -1,19 +1,15 @@
 from collections import namedtuple
 from cloud import serialization
 import bluelet
-import string
-import random
 import marshal
+import random
 
 PORT = 5494
 # Some random bytes to separate messages.
 SENTINEL = b'\x8d\xa9 \xee\x01\xe6B\xec\xaa\n\xe1A:\x15\x8d\x1b'
 
-
-# Utilities.
-
-def random_string(length=32, chars=(string.ascii_letters + string.digits)):
-    return ''.join(random.choice(chars) for i in range(length))
+def randid():
+    return random.getrandbits(128)
 
 
 # Function serialization.

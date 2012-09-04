@@ -109,7 +109,7 @@ class ClusterExecutor(concurrent.futures.Executor):
     def submit(self, func, *args, **kwargs):
         future = concurrent.futures.Future()
 
-        jobid = cw.random_string()
+        jobid = cw.randid()
         with self.jobs_lock:
             self.futures[jobid] = future
         self.thread.start_job(jobid, func, *args, **kwargs)
