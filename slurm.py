@@ -83,7 +83,7 @@ def start(nworkers, master=True, workers=True):
 
 def stop(master=True, workers=True):
     # Workers.
-    worker_jobid = get_jobid(cw.JOB_MASTER)
+    worker_jobid = get_jobid(cw.JOB_WORKERS)
     if worker_jobid:
         print('stopping workers')
         scancel(worker_jobid)
