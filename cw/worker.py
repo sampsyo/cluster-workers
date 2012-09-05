@@ -63,8 +63,10 @@ class Worker(object):
 if __name__ == '__main__':
     args = sys.argv[1:]
 
-    if args:
-        host = args.pop()
+    if args and args[0] == '--slurm':
+        host = cw.slurm_master_host()
+    elif args:
+        host = args[0]
     else:
         host = 'localhost'
 

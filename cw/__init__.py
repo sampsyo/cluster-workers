@@ -3,10 +3,13 @@ from cloud import serialization
 import bluelet
 import marshal
 import random
+import subprocess
 
 PORT = 5494
 # Some random bytes to separate messages.
 SENTINEL = b'\x8d\xa9 \xee\x01\xe6B\xec\xaa\n\xe1A:\x15\x8d\x1b'
+JOB_MASTER ='cmaster'
+JOB_WORKERS = 'cworkers'
 
 def randid():
     return random.getrandbits(128)
@@ -71,3 +74,24 @@ def _readmsg(conn):
     data = data[:-len(SENTINEL)]
     obj = _msg_deser(data)
     yield bluelet.end(obj)
+
+
+# Slurm utilities.
+
+def slurm_jobinfo():
+    """Uses "squeue" to generate a list of job information tuples. The
+    tuples are of the form (jobid, jobname, nodelist).
+    """
+    joblist = subprocess.check_output(
+        ['squeue', '-j', str(jobid), '-o', '%i %j %N', '-h']
+    )
+    for line in joblist.strip().split('\n'):
+        jobid, name, nodelist = line.split(' ', 2)
+        return int(jobid), name, nodelist
+
+def slurm_master_host():
+    for jobid, name, nodelist in slurm_jobinfo():
+        if name == JOB_MASTER:
+            assert '[' not in nodelist
+            return nodelist
+    assert False, 'no master job found'

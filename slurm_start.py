@@ -7,6 +7,7 @@ import subprocess
 import sys
 import time
 import argparse
+import cw
 
 DEFAULT_WORKERS = 16
 
@@ -32,8 +33,8 @@ def nodelist(jobid):
         ['squeue', '-j', str(jobid), '-o', '%N', '-h']
     )
 
-def start_workers(host, num=2):
-    command = "{} -m cw.worker {}".format(sys.executable, host)
+def start_workers(num=2):
+    command = "{} -m cw.worker --slurm".format(sys.executable)
     name = "cworkers"
     script_lines = [
         "#!/bin/sh",
@@ -53,22 +54,19 @@ def start_master():
     ]
     return sbatch('\n'.join(script_lines))
 
-def start(nworkers, host=None, master=True, workers=True):
+def start(nworkers, master=True, workers=True):
     # Master.
     if master:
         print('starting master')
         jobid = start_master()
-        if host is None:
-            host = nodelist(jobid)
         print('master job', jobid, 'started')
         time.sleep(5)
+        print('master running on', cw.slurm_master_host())
 
     # Workers.
     if workers:
-        if host is None:
-            host = subprocess.check_output("hostname").strip()
-        print('starting {} workers for master {}'.format(nworkers, host))
-        jobid = start_workers(host, nworkers)
+        print('starting {} workers'.format(nworkers))
+        jobid = start_workers(nworkers)
         print('worker job', jobid, 'started')
 
 def cli():
@@ -87,12 +85,8 @@ def cli():
         '-W', dest='workers', action='store_false', default=True,
         help='do not start workers'
     )
-    parser.add_argument(
-        '-m', dest='host', metavar='HOST', type=str,
-        help='master hostname'
-    )
     args = parser.parse_args()
-    start(args.nworkers, args.host, args.master, args.workers)
+    start(args.nworkers, args.master, args.workers)
 
 if __name__ == '__main__':
     cli()

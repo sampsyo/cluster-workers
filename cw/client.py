@@ -125,6 +125,10 @@ class ClusterExecutor(concurrent.futures.Executor):
         self.thread.stop()
         self.thread.join()
 
+class SlurmExecutor(ClusterExecutor):
+    def __init__(self):
+        super(SlurmExecutor, self).__init__(cw.slurm_master_host())
+
 def test():
     def square(n):
         return n * n
