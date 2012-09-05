@@ -30,7 +30,9 @@ def startjob(command, name=None, options=()):
     """Start a Slurm job and return the job ID."""
     options = list(options)
     if name:
-        options.insert(0, '--job-name=' + name)
+        options.append('--job-name={}'.format(name))
+        options.append('--output={}.out'.format(name))
+        options.append('--error={}.out'.format(name))
 
     script_lines = ["#!/bin/sh"]
     if options:
