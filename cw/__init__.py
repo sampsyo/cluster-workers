@@ -84,8 +84,10 @@ def slurm_jobinfo():
     """
     joblist = subprocess.check_output(
         ['squeue', '-o', '%i %j %N', '-h']
-    )
-    for line in joblist.strip().split('\n'):
+    ).strip()
+    if not joblist:
+        return
+    for line in joblist.split('\n'):
         jobid, name, nodelist = line.split(' ', 2)
         yield int(jobid), name, nodelist
 

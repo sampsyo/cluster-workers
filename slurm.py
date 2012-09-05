@@ -39,12 +39,19 @@ def startjob(command, name=None, options=()):
 
     return sbatch('\n'.join(script_lines))
 
-def nodelist(jobid):
-    """Given a Slurm job ID, get the nodes that are running it.
+def scancel(jobid, signal='INT'):
+    """Cancel a Slurm job given its ID.
     """
-    return subprocess.check_output(
-        ['squeue', '-j', str(jobid), '-o', '%N', '-h']
+    subprocess.check_call(
+        ['scancel', '-s', signal, str(jobid)]
     )
+
+def get_jobid(jobname):
+    """Given a job name, return its ID or None if not found.
+    """
+    for jobid, name, nodelist in cw.slurm_jobinfo():
+        if name == jobname:
+            return jobid
 
 def start_workers(num=2):
     command = "{} -m cw.worker --slurm".format(sys.executable)
@@ -72,24 +79,47 @@ def start(nworkers, master=True, workers=True):
         jobid = start_workers(nworkers)
         print('worker job', jobid, 'started')
 
+def stop(master=True, workers=True):
+    # Workers.
+    worker_jobid = get_jobid(cw.JOB_MASTER)
+    if worker_jobid:
+        print('stopping workers')
+        scancel(worker_jobid)
+        time.sleep(5)
+
+    # Master.
+    master_jobid = get_jobid(cw.JOB_MASTER)
+    if master_jobid:
+        print('stopping workers')
+        scancel(master_jobid)
+
 def cli():
     parser = argparse.ArgumentParser(
         description='start Python workers on a Slurm cluster'
     )
     parser.add_argument(
-        'nworkers', metavar='N', type=int, nargs='?', default=DEFAULT_WORKERS,
+        'action', metavar='start|stop', help='action'
+    )
+    parser.add_argument(
+        '-n', dest='nworkers', metavar='N', type=int, default=DEFAULT_WORKERS,
         help='number of workers to start (default {})'.format(DEFAULT_WORKERS)
     )
     parser.add_argument(
         '-M', dest='master', action='store_false', default=True,
-        help='do not start master'
+        help='do not start/stop master'
     )
     parser.add_argument(
         '-W', dest='workers', action='store_false', default=True,
-        help='do not start workers'
+        help='do not start/stop workers'
     )
     args = parser.parse_args()
-    start(args.nworkers, args.master, args.workers)
+
+    if args.action == 'start':
+        start(args.nworkers, args.master, args.workers)
+    elif args.action == 'stop':
+        stop(args.master, args.workers)
+    else:
+        parser.error('action must be stop or start')
 
 if __name__ == '__main__':
     cli()
