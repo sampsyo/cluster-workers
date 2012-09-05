@@ -5,8 +5,6 @@ import os
 import tempfile
 import subprocess
 import sys
-import cw.master
-import threading
 import time
 import argparse
 
@@ -27,6 +25,13 @@ def sbatch(job):
     jobid = re.search(r'job (\d+)', out).group(1)
     return int(jobid)
 
+def nodelist(jobid):
+    """Given a Slurm job ID, get the nodes that are running it.
+    """
+    return subprocess.check_output(
+        ['squeue', '-j', str(jobid), '-o', '%N', '-h']
+    )
+
 def start_workers(host, num=2):
     command = "{} -m cw.worker {}".format(sys.executable, host)
     name = "cworkers"
@@ -37,59 +42,57 @@ def start_workers(host, num=2):
     ]
     return sbatch('\n'.join(script_lines))
 
-class MasterThread(threading.Thread):
-    def __init__(self):
-        super(MasterThread, self).__init__()
-        self.daemon = True
+def start_master():
+    """Start a job for the master process. Return the Slurm job ID.
+    """
+    command = "{} -m cw.master".format(sys.executable)
+    script_lines = [
+        "#!/bin/sh",
+        "#SBATCH --job-name=cmaster",
+        "srun {}".format(command),
+    ]
+    return sbatch('\n'.join(script_lines))
 
-    def run(self):
-        cw.master.Master().run()
-
-def start(workers, host=None, master=False):
-    if host is None:
-        host = subprocess.check_output("hostname").strip()
-    print('starting {} workers for master {}'.format(workers, host))
-
+def start(nworkers, host=None, master=True, workers=True):
+    # Master.
     if master:
-        print('starting master thread')
-        thread = MasterThread()
-        thread.start()
-        time.sleep(1)  # Wait for listening socket to be ready.
+        print('starting master')
+        jobid = start_master()
+        if host is None:
+            host = nodelist(jobid)
+        print('master job', jobid, 'started')
+        time.sleep(5)
 
-    print('starting worker job')
-    jobid = start_workers(host, workers)
-    print('worker job', jobid, 'started')
-
-    if master:
-        try:
-            # Block indefinitely.
-            while True:
-                time.sleep(60)
-        except KeyboardInterrupt:
-            pass
-        finally:
-            print('stopping slurm job', jobid)
-            subprocess.check_output(['scancel', '--signal=INT', str(jobid)])
-            time.sleep(1)
+    # Workers.
+    if workers:
+        if host is None:
+            host = subprocess.check_output("hostname").strip()
+        print('starting {} workers for master {}'.format(nworkers, host))
+        jobid = start_workers(host, nworkers)
+        print('worker job', jobid, 'started')
 
 def cli():
     parser = argparse.ArgumentParser(
         description='start Python workers on a Slurm cluster'
     )
     parser.add_argument(
-        'workers', metavar='N', type=int, nargs='?', default=DEFAULT_WORKERS,
+        'nworkers', metavar='N', type=int, nargs='?', default=DEFAULT_WORKERS,
         help='number of workers to start (default {})'.format(DEFAULT_WORKERS)
     )
     parser.add_argument(
-        '-m', dest='host', metavar='HOST', type=str,
-        help='master hostname (default this host)'
+        '-M', dest='master', action='store_false', default=True,
+        help='do not start master'
     )
     parser.add_argument(
-        '-M', dest='master', action='store_true',
-        help='block and run master too'
+        '-W', dest='workers', action='store_false', default=True,
+        help='do not start workers'
+    )
+    parser.add_argument(
+        '-m', dest='host', metavar='HOST', type=str,
+        help='master hostname'
     )
     args = parser.parse_args()
-    start(args.workers, args.host, args.master)
+    start(args.nworkers, args.host, args.master, args.workers)
 
 if __name__ == '__main__':
     cli()
