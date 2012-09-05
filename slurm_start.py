@@ -9,7 +9,7 @@ import time
 import argparse
 import cw
 
-DEFAULT_WORKERS = 16
+DEFAULT_WORKERS = 32
 
 def sbatch(job):
     """Submits a Slurm job represented as a sbatch script string. Returns

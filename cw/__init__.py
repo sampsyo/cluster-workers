@@ -83,11 +83,11 @@ def slurm_jobinfo():
     tuples are of the form (jobid, jobname, nodelist).
     """
     joblist = subprocess.check_output(
-        ['squeue', '-j', str(jobid), '-o', '%i %j %N', '-h']
+        ['squeue', '-o', '%i %j %N', '-h']
     )
     for line in joblist.strip().split('\n'):
         jobid, name, nodelist = line.split(' ', 2)
-        return int(jobid), name, nodelist
+        yield int(jobid), name, nodelist
 
 def slurm_master_host():
     for jobid, name, nodelist in slurm_jobinfo():
