@@ -26,6 +26,19 @@ def sbatch(job):
     jobid = re.search(r'job (\d+)', out).group(1)
     return int(jobid)
 
+def startjob(command, name=None, options=()):
+    """Start a Slurm job and return the job ID."""
+    options = list(options)
+    if name:
+        options.insert(0, '--job-name=' + name)
+
+    script_lines = ["#!/bin/sh"]
+    if options:
+        script_lines.append('#SBATCH ' + ' '.join(options))
+    script_lines.append('srun ' + command)
+
+    return sbatch('\n'.join(script_lines))
+
 def nodelist(jobid):
     """Given a Slurm job ID, get the nodes that are running it.
     """
@@ -35,24 +48,14 @@ def nodelist(jobid):
 
 def start_workers(num=2):
     command = "{} -m cw.worker --slurm".format(sys.executable)
-    name = "cworkers"
-    script_lines = [
-        "#!/bin/sh",
-        "#SBATCH --nodes={} --job-name={}".format(num, name),
-        "srun {}".format(command),
-    ]
-    return sbatch('\n'.join(script_lines))
+    options = ['--ntasks={}'.format(num)]
+    return startjob(command, cw.JOB_WORKERS, options)
 
 def start_master():
     """Start a job for the master process. Return the Slurm job ID.
     """
     command = "{} -m cw.master".format(sys.executable)
-    script_lines = [
-        "#!/bin/sh",
-        "#SBATCH --job-name=cmaster",
-        "srun {}".format(command),
-    ]
-    return sbatch('\n'.join(script_lines))
+    return startjob(command, cw.JOB_MASTER)
 
 def start(nworkers, master=True, workers=True):
     # Master.
