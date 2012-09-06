@@ -31,7 +31,7 @@ class Client(object):
         task = cw.TaskMessage(jobid, cw.call_ser(call))
         yield cw._sendmsg(self.conn, task)
 
-class ClientThread(threading.Thread, Client):
+class BaseClientThread(threading.Thread, Client):
     def __init__(self, callback, host='localhost', port=cw.PORT):
         threading.Thread.__init__(self)
         Client.__init__(self, host, port)
@@ -85,9 +85,27 @@ class RemoteException(Exception):
     def __str__(self):
         return '\n' + self.error.strip()
 
+class ClientThread(BaseClientThread):
+    """A slightly nicer ClientThread that generates job IDs for you and
+    raises exceptions when things go wrong on the remote side.
+    """
+    def __init__(self, callback, host='localhost', port=cw.PORT):
+        super(ClientThread, self).__init__(self._completion, host, port)
+        self.app_callback = callback
+
+    def submit(self, func, *args, **kwargs):
+        jobid = cw.randid()
+        self.start_job(jobid, func, *args, **kwargs)
+        return jobid
+
+    def _completion(self, jobid, success, result):
+        if not success:
+            raise RemoteException(result)
+        self.app_callback(jobid, result)
+
 class ClusterExecutor(concurrent.futures.Executor):
     def __init__(self, host='localhost', port=cw.PORT):
-        self.thread = ClientThread(self._completion, host, port)
+        self.thread = BaseClientThread(self._completion, host, port)
         self.thread.start()
 
         self.futures = {}
