@@ -1,4 +1,10 @@
 from setuptools import setup
+import os
+
+def _read(fn):
+    path = os.path.join(os.path.dirname(__file__), fn)
+    data = open(path).read()
+    return data
 
 setup(name='cluster-workers',
       version='0.1.0',
@@ -9,7 +15,7 @@ setup(name='cluster-workers',
       url='https://github.com/sampsyo/cluster-workers',
       license='MIT',
       platforms='ALL',
-      long_description='',
+      long_description=_read('README.rst'),
 
       packages=['cw'],
       install_requires=['bluelet'],
