@@ -1,4 +1,4 @@
-from collections import namedtuple
+from collections import namedtuple, OrderedDict
 from cloud import serialization
 import bluelet
 import marshal
@@ -14,8 +14,31 @@ JOB_WORKERS = 'cworkers'
 def randid():
     return random.getrandbits(128)
 
+def lru_cache(size=128):
+    """Function decorator that memoizes results in-memory.
+    """
+    def decorator(func):
+        cache = OrderedDict()
+        def wrapper(*args, **kwargs):
+            key = (args, tuple(sorted(kwargs.items())))
+            if key in cache:
+                # Hit.
+                result = cache.pop(key)
+                cache[key] = result
+                return result
+            else:
+                # Miss.
+                result = func(*args, **kwargs)
+                cache[key] = result
+                if len(cache) > size:
+                    # Eviction.
+                    del cache[cache.iterkeys().next()]
+                return result
+        return wrapper
+    return decorator
 
-# Function serialization.
+
+# User data serialization.
 
 def slow_ser(obj):
     """Serialize a complex object (like a closure)."""
@@ -24,6 +47,14 @@ def slow_ser(obj):
 def slow_deser(blob):
     """Deserialize a complex object."""
     return serialization.deserialize(blob)
+
+@lru_cache()
+def func_ser(obj):
+    return slow_ser(obj)
+
+@lru_cache()
+def func_deser(blob):
+    return slow_deser(blob)
 
 
 # Messages.

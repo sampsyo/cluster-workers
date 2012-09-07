@@ -30,7 +30,7 @@ class Client(object):
     def send_job(self, jobid, func, *args, **kwargs):
         task = cw.TaskMessage(
             jobid,
-            cw.slow_ser(func), cw.slow_ser(args), cw.slow_ser(kwargs),
+            cw.func_ser(func), cw.slow_ser(args), cw.slow_ser(kwargs),
             os.getcwd(),
         )
         yield cw._sendmsg(self.conn, task)

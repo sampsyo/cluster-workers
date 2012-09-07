@@ -40,7 +40,7 @@ class Worker(object):
                 assert isinstance(msg, cw.TaskMessage)
 
                 try:
-                    func = cw.slow_deser(msg.func_blob)
+                    func = cw.func_deser(msg.func_blob)
                     args = cw.slow_deser(msg.args_blob)
                     kwargs = cw.slow_deser(msg.kwargs_blob)
                     with chdir(msg.cwd):
