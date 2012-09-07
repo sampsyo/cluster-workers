@@ -38,16 +38,20 @@ class Worker(object):
                     connected = False
                     break
                 assert isinstance(msg, cw.TaskMessage)
-                call = cw.call_deser(msg.call_blob)
 
                 try:
-                    with chdir(call.cwd):
-                        res = call.func(*call.args, **call.kwargs)
+                    func = cw.slow_deser(msg.func_blob)
+                    args = cw.slow_deser(msg.args_blob)
+                    kwargs = cw.slow_deser(msg.kwargs_blob)
+                    with chdir(msg.cwd):
+                        res = func(*args, **kwargs)
                 except:
                     res = format_remote_exc()
-                    response = cw.ResultMessage(msg.jobid, False, res)
+                    response = cw.ResultMessage(msg.jobid, False,
+                                                cw.slow_ser(res))
                 else:
-                    response = cw.ResultMessage(msg.jobid, True, res)
+                    response = cw.ResultMessage(msg.jobid, True,
+                                                cw.slow_ser(res))
                 yield cw._sendmsg(conn, response)
 
         finally:

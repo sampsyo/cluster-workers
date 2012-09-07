@@ -17,25 +17,22 @@ def randid():
 
 # Function serialization.
 
-# Represents a delayed function call with all its components. This is
-# separate from a TaskMessage so that it does not need to be
-# unpacked/repacked on the master -- only the metadata needs that.
-Call = namedtuple('Call', ['func', 'args', 'kwargs', 'cwd'])
+def slow_ser(obj):
+    """Serialize a complex object (like a closure)."""
+    return serialization.serialize(obj, True)
 
-def call_ser(call):
-    """Serialize a Call to an opaque binary blob."""
-    return serialization.serialize(call, True)
-
-def call_deser(blob):
-    """Deserialize a Call from a blob."""
+def slow_deser(blob):
+    """Deserialize a complex object."""
     return serialization.deserialize(blob)
 
 
 # Messages.
 
-TaskMessage = namedtuple('TaskMessage', ['jobid', 'call_blob'])
+TaskMessage = namedtuple('TaskMessage',
+    ['jobid', 'func_blob', 'args_blob', 'kwargs_blob', 'cwd'])
 
-ResultMessage = namedtuple('ResultMessage', ['jobid', 'success', 'result'])
+ResultMessage = namedtuple('ResultMessage',
+    ['jobid', 'success', 'result_blob'])
 
 class WorkerRegisterMessage(object):
     pass

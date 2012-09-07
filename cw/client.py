@@ -24,11 +24,15 @@ class Client(object):
                 return
             assert isinstance(result, cw.ResultMessage)
 
-            callback(result.jobid, result.success, result.result)
+            callback(result.jobid, result.success,
+                     cw.slow_deser(result.result_blob))
 
     def send_job(self, jobid, func, *args, **kwargs):
-        call = cw.Call(func, args, kwargs, os.getcwd())
-        task = cw.TaskMessage(jobid, cw.call_ser(call))
+        task = cw.TaskMessage(
+            jobid,
+            cw.slow_ser(func), cw.slow_ser(args), cw.slow_ser(kwargs),
+            os.getcwd(),
+        )
         yield cw._sendmsg(self.conn, task)
 
 class BaseClientThread(threading.Thread, Client):
