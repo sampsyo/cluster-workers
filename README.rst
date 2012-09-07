@@ -66,6 +66,13 @@ constructor.
 
 .. _SLURM: https://computing.llnl.gov/linux/slurm/
 
+Using Locally on an SMP
+-----------------------
+
+For testing and small jobs, you may want to run a cluster-workers program on a
+single multiprocessor machine. The included ``mp.py`` script works like
+``slurm.py`` but starts the master and workers on the local machine.
+
 Author
 ------
 
