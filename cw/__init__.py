@@ -97,7 +97,10 @@ def _sendmsg(conn, obj):
 
 def _readmsg(conn):
     data = yield conn.readline(SENTINEL)
-    if SENTINEL not in data:
+    if data is None or SENTINEL not in data:
+        # `data` can be None because of a questionable decision in
+        # bluelet to return None from a socket operation when it raises
+        # an exception. I should fix this sometime.
         yield bluelet.end()  # Socket closed.
     data = data[:-len(SENTINEL)]
     obj = _msg_deser(data)
