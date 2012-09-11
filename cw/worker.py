@@ -18,6 +18,15 @@ def chdir(d):
     yield
     os.chdir(olddir)
 
+def amend_path():
+    # This ridiculous bit of hackery ensures that the modules under the
+    # cw package can themselves be used by jobs. In the case that the
+    # workers are run from the directory containing cw, cw.__path__ will
+    # be ['cw']. Then, after cwd'ing to run a job, it will no longer be
+    # possible to find that path. Absolute-ifying the package path makes
+    # it relocatable.
+    cw.__path__ = map(os.path.abspath, cw.__path__)
+
 class Worker(object):
     def __init__(self, host='localhost', port=cw.PORT):
         self.host = host
@@ -40,10 +49,10 @@ class Worker(object):
                 assert isinstance(msg, cw.TaskMessage)
 
                 try:
-                    func = cw.func_deser(msg.func_blob)
-                    args = cw.slow_deser(msg.args_blob)
-                    kwargs = cw.slow_deser(msg.kwargs_blob)
                     with chdir(msg.cwd):
+                        func = cw.func_deser(msg.func_blob)
+                        args = cw.slow_deser(msg.args_blob)
+                        kwargs = cw.slow_deser(msg.kwargs_blob)
                         res = func(*args, **kwargs)
                 except:
                     res = format_remote_exc()
@@ -59,6 +68,7 @@ class Worker(object):
                 yield cw._sendmsg(conn, cw.WorkerDepartMessage())
 
     def run(self):
+        amend_path()
         try:
             bluelet.run(self.communicate())
         except KeyboardInterrupt:
