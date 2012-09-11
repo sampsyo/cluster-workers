@@ -12,18 +12,19 @@ def ps():
     a list of (pid, args) pairs.
     """
     output = subprocess.check_output(
-        ['ps', '--no-headers', '-a', '-o', 'pid args']
+        ['ps', '-a', '-o', 'pid args']
     )
-    for row in output.strip().split('\n'):
+    lines = output.strip().split('\n')
+    for row in lines[1:]:  # Skip header row.
         pid, args = row.split(None, 1)
         yield int(pid), args
 
 def pids_for(argpat):
     """Generate the pids of processes whose arguments contain a given
-    string.
+    string (case-insensitive).
     """
     for pid, args in ps():
-        if argpat in args:
+        if argpat.lower() in args.lower():
             yield pid
 
 def kill(pids):
