@@ -97,15 +97,41 @@ class ClientThread(BaseClientThread):
         super(ClientThread, self).__init__(self._completion, host, port)
         self.app_callback = callback
 
+        self.active_jobs = 0
+        self.remote_exception = None
+        self.jobs_cond = threading.Condition()
+
     def submit(self, func, *args, **kwargs):
         jobid = cw.randid()
-        self.start_job(jobid, func, *args, **kwargs)
+        with self.jobs_cond:
+            self.active_jobs += 1
+            self.start_job(jobid, func, *args, **kwargs)
         return jobid
 
     def _completion(self, jobid, success, result):
-        if not success:
-            raise RemoteException(result)
-        self.app_callback(jobid, result)
+        with self.jobs_cond:
+            if success:
+                self.app_callback(jobid, result)
+                self.active_jobs -= 1
+            else:
+                self.remote_exception = RemoteException(result)
+                self.active_jobs = 0
+
+            if not self.active_jobs:
+                self.jobs_cond.notify_all()
+
+    def wait(self):
+        """Block until all outstanding jobs have finished.
+        """
+        with self.jobs_cond:
+            while self.active_jobs:
+                self.jobs_cond.wait()
+
+            # Raise worker exception on main thread.
+            exc = self.remote_exception
+            if exc:
+                self.remote_exception = None
+                raise exc
 
 class ClusterExecutor(concurrent.futures.Executor):
     def __init__(self, host='localhost', port=cw.PORT):
