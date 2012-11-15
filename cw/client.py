@@ -101,11 +101,11 @@ class ClientThread(BaseClientThread):
         self.remote_exception = None
         self.jobs_cond = threading.Condition()
 
-    def submit(self, func, *args, **kwargs):
-        jobid = cw.randid()
+    def submit(self, func, jobid=None, *args, **kwargs):
+        jobid = jobid or cw.randid()
         with self.jobs_cond:
             self.active_jobs += 1
-            self.start_job(jobid, func, *args, **kwargs)
+        self.start_job(jobid, func, *args, **kwargs)
         return jobid
 
     def _completion(self, jobid, success, result):

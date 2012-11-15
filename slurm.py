@@ -92,7 +92,7 @@ def stop(master=True, workers=True):
     # Master.
     master_jobid = get_jobid(cw.JOB_MASTER)
     if master_jobid:
-        print('stopping workers')
+        print('stopping master')
         scancel(master_jobid)
 
 def cli():
