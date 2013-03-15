@@ -114,9 +114,7 @@ class ClientThread(BaseClientThread):
             else:
                 self.remote_exception = RemoteException(result)
                 self.active_jobs = 0
-
-            if not self.active_jobs:
-                self.jobs_cond.notify_all()
+            self.jobs_cond.notify_all()
 
     def wait(self):
         """Block until all outstanding jobs have finished.
