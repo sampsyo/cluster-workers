@@ -55,9 +55,9 @@ def get_jobid(jobname):
         if name == jobname:
             return jobid
 
-def start_workers(num=2):
+def start_workers(num=2, options=()):
     command = "{} -m cw.worker --slurm".format(sys.executable)
-    options = ['--ntasks={}'.format(num)]
+    options = ['--ntasks={}'.format(num)] + options
     return startjob(command, cw.JOB_WORKERS, options)
 
 def start_master():
@@ -66,7 +66,7 @@ def start_master():
     command = "{} -m cw.master".format(sys.executable)
     return startjob(command, cw.JOB_MASTER)
 
-def start(nworkers, master=True, workers=True):
+def start(nworkers, master=True, workers=True, isolated=False):
     # Master.
     if master:
         print('starting master')
@@ -78,7 +78,8 @@ def start(nworkers, master=True, workers=True):
     # Workers.
     if workers:
         print('starting {} workers'.format(nworkers))
-        jobid = start_workers(nworkers)
+        options = ['--ntasks-per-node=1'] if isolated else []
+        jobid = start_workers(nworkers, options)
         print('worker job', jobid, 'started')
 
 def stop(master=True, workers=True):
@@ -114,10 +115,14 @@ def cli():
         '-W', dest='workers', action='store_false', default=True,
         help='do not start/stop workers'
     )
+    parser.add_argument(
+        '-i', '--isolated', dest='isolated', action='store_true',
+        default=False, help='only one worker per node'
+    )
     args = parser.parse_args()
 
     if args.action == 'start':
-        start(args.nworkers, args.master, args.workers)
+        start(args.nworkers, args.master, args.workers, args.isolated)
     elif args.action == 'stop':
         stop(args.master, args.workers)
     else:
