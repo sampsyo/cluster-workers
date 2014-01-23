@@ -32,7 +32,9 @@ up the actual task execution.
 Using
 -----
 
-Documentation is currently sparse. But here's the gist:
+Documentation is currently sparse. But take a look at the ``square.py``
+example in the ``examples`` directory for a quick introduction. Here's the
+gist of how things work:
 
 * Start a master process with ``python -m cw.master``.
 * Start lots of workers with ``python -m cw.worker [HOST]``. Provide the
