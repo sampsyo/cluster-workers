@@ -4,6 +4,7 @@ import bluelet
 import marshal
 import random
 import subprocess
+import getpass
 
 PORT = 5494
 # Some random bytes to separate messages.
@@ -111,20 +112,21 @@ def _readmsg(conn):
 
 def slurm_jobinfo():
     """Uses "squeue" to generate a list of job information tuples. The
-    tuples are of the form (jobid, jobname, nodelist).
+    tuples are of the form (jobid, jobname, username, nodelist).
     """
     joblist = subprocess.check_output(
-        ['squeue', '-o', '%i %j %N', '-h']
+        ['squeue', '-o', '%i %j %u %N', '-h']
     ).strip()
     if not joblist:
         return
     for line in joblist.split('\n'):
-        jobid, name, nodelist = line.split(' ', 2)
-        yield int(jobid), name, nodelist
+        jobid, name, user, nodelist = line.split(' ', 2)
+        yield int(jobid), name, user, nodelist
 
 def slurm_master_host():
-    for jobid, name, nodelist in slurm_jobinfo():
-        if name == JOB_MASTER:
+    cur_user = getpass.getuser()
+    for jobid, name, user, nodelist in slurm_jobinfo():
+        if name == JOB_MASTER and user == cur_user:
             assert '[' not in nodelist
             return nodelist
     assert False, 'no master job found'
