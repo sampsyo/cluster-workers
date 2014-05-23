@@ -8,6 +8,7 @@ import sys
 import time
 import argparse
 import cw
+import getpass
 
 DEFAULT_WORKERS = 32
 
@@ -49,10 +50,12 @@ def scancel(jobid, signal='INT'):
     )
 
 def get_jobid(jobname):
-    """Given a job name, return its ID or None if not found.
+    """Given a job name, return the ID of a job belonging to this user
+    matching that name or None if not found.
     """
-    for jobid, name, nodelist in cw.slurm_jobinfo():
-        if name == jobname:
+    cur_user = getpass.getuser()
+    for jobid, name, user, nodelist in cw.slurm_jobinfo():
+        if name == jobname and user == cur_user:
             return jobid
 
 def start_workers(num=2, options=()):
