@@ -120,7 +120,7 @@ def slurm_jobinfo():
     if not joblist:
         return
     for line in joblist.split('\n'):
-        jobid, name, user, nodelist = line.split(' ', 2)
+        jobid, name, user, nodelist = line.split(' ', 3)
         yield int(jobid), name, user, nodelist
 
 def slurm_master_host():
