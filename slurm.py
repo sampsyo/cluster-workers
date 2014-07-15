@@ -69,7 +69,7 @@ def start_master():
     command = "{} -m cw.master".format(sys.executable)
     return startjob(command, cw.JOB_MASTER)
 
-def start(nworkers, master=True, workers=True, isolated=False):
+def start(nworkers, master=True, workers=True, worker_options=()):
     # Master.
     if master:
         print('starting master')
@@ -81,8 +81,7 @@ def start(nworkers, master=True, workers=True, isolated=False):
     # Workers.
     if workers:
         print('starting {} workers'.format(nworkers))
-        options = ['--ntasks-per-node=1'] if isolated else []
-        jobid = start_workers(nworkers, options)
+        jobid = start_workers(nworkers, worker_options)
         print('worker job', jobid, 'started')
 
 def stop(master=True, workers=True):
@@ -122,10 +121,19 @@ def cli():
         '-i', '--isolated', dest='isolated', action='store_true',
         default=False, help='only one worker per node'
     )
+    parser.add_argument(
+        '--Xworkers', dest='worker_options', metavar='ARG',
+        default=[], action='append',
+        help='arguments to pass to worker job',
+    )
     args = parser.parse_args()
 
+    worker_options = args.worker_options
+    if args.isolated:
+        worker_options.append('--ntasks-per-node=1')
+
     if args.action == 'start':
-        start(args.nworkers, args.master, args.workers, args.isolated)
+        start(args.nworkers, args.master, args.workers, worker_options)
     elif args.action == 'stop':
         stop(args.master, args.workers)
     else:
