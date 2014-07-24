@@ -63,17 +63,18 @@ def start_workers(num=2, options=()):
     options = ['--ntasks={}'.format(num)] + options
     return startjob(command, cw.JOB_WORKERS, options)
 
-def start_master():
+def start_master(options=()):
     """Start a job for the master process. Return the Slurm job ID.
     """
     command = "{} -m cw.master".format(sys.executable)
-    return startjob(command, cw.JOB_MASTER)
+    return startjob(command, cw.JOB_MASTER, options)
 
-def start(nworkers, master=True, workers=True, worker_options=()):
+def start(nworkers, master=True, workers=True, master_options=(),
+          worker_options=()):
     # Master.
     if master:
         print('starting master')
-        jobid = start_master()
+        jobid = start_master(master_options)
         print('master job', jobid, 'started')
         time.sleep(5)
         print('master running on', cw.slurm_master_host())
@@ -126,6 +127,11 @@ def cli():
         default=[], action='append',
         help='arguments to pass to worker job',
     )
+    parser.add_argument(
+        '--Xmaster', dest='master_options', metavar='ARG',
+        default=[], action='append',
+        help='arguments to pass to master job',
+    )
     args = parser.parse_args()
 
     worker_options = args.worker_options
@@ -133,7 +139,8 @@ def cli():
         worker_options.append('--ntasks-per-node=1')
 
     if args.action == 'start':
-        start(args.nworkers, args.master, args.workers, worker_options)
+        start(args.nworkers, args.master, args.workers,
+              args.master_options, worker_options)
     elif args.action == 'stop':
         stop(args.master, args.workers)
     else:
