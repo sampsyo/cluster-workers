@@ -11,6 +11,7 @@ import cw
 import getpass
 
 DEFAULT_WORKERS = 32
+DOCKER = {}
 
 def sbatch(job):
     """Submits a Slurm job represented as a sbatch script string. Returns
@@ -59,7 +60,10 @@ def get_jobid(jobname):
             return jobid
 
 def start_workers(num=2, options=()):
-    command = "{} -m cw.worker --slurm".format(sys.executable)
+    if DOCKER['image']:
+        command = "docker run -i --rm --net=host {} {} -m cw.worker {}".format(DOCKER['args'], DOCKER['image'], cw.slurm_master_host())
+    else:
+        command = "{} -m cw.worker --slurm".format(sys.executable)
     options = ['--ntasks={}'.format(num)] + options
     return startjob(command, cw.JOB_WORKERS, options)
 
@@ -119,6 +123,14 @@ def cli():
         help='do not start/stop workers'
     )
     parser.add_argument(
+        '-d', '--docker-image', dest='docker_image', type=str, default=None,
+        help='if specified, will run cluster workers with the given docker image'
+    )
+    parser.add_argument(
+        '--docker-args', dest='docker_args', type=str, default=None,
+        help='arguments to pass to `docker run`'
+    )
+    parser.add_argument(
         '-i', '--isolated', dest='isolated', action='store_true',
         default=False, help='only one worker per node'
     )
@@ -134,10 +146,13 @@ def cli():
     )
     args = parser.parse_args()
 
+    DOCKER['image'] = args.docker_image
+    DOCKER['args']  = args.docker_args
+
     worker_options = args.worker_options
     if args.isolated:
         worker_options.append('--ntasks-per-node=1')
-
+    
     if args.action == 'start':
         start(args.nworkers, args.master, args.workers,
               args.master_options, worker_options)
