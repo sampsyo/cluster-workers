@@ -1,4 +1,5 @@
 import cw.client
+import cw.slurm
 
 
 def completion(jobid, output):
@@ -17,10 +18,20 @@ def work(n):
 
 
 def main():
+    
+    # If you wish to start a worker cluster just for this script, you
+    # can do so with a command like this. See the slurm module for
+    # more info on the available options. 
+    #
+    # Note: If you are running multiple cluster-workers scripts, be 
+    # careful with this because only one set of master/workers can be
+    # running at a time.
+    cw.slurm.start(nworkers=2)
+    
     # Set up the client, connecting to the mast host. Replace the second
     # argument below with 'localhost' if you want to connect to a local
     # (i.e., development) cluster.
-    client = cw.client.ClientThread(completion, cw.slurm_master_host())
+    client = cw.client.ClientThread(completion, cw.slurm.master_host())
     client.start()
 
     # Submit a bunch of work.
@@ -35,7 +46,11 @@ def main():
     # the results of all of our work before shutting down the
     # interpreter.
     client.wait()
-
+    
+    # If you started the worker cluster programmatically above, you 
+    # can safely shut down the cluster workers. This will free up the
+    # nodes.
+    cw.slurm.stop()
 
 if __name__ == '__main__':
     main()
