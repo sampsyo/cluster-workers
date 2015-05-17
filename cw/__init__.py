@@ -9,8 +9,6 @@ import getpass
 PORT = 5494
 # Some random bytes to separate messages.
 SENTINEL = b'\x8d\xa9 \xee\x01\xe6B\xec\xaa\n\xe1A:\x15\x8d\x1b'
-JOB_MASTER ='cmaster'
-JOB_WORKERS = 'cworkers'
 
 def randid():
     return random.getrandbits(128)
@@ -107,26 +105,3 @@ def _readmsg(conn):
     obj = _msg_deser(data)
     yield bluelet.end(obj)
 
-
-# Slurm utilities.
-
-def slurm_jobinfo():
-    """Uses "squeue" to generate a list of job information tuples. The
-    tuples are of the form (jobid, jobname, username, nodelist).
-    """
-    joblist = subprocess.check_output(
-        ['squeue', '-o', '%i %j %u %N', '-h']
-    ).strip()
-    if not joblist:
-        return
-    for line in joblist.split('\n'):
-        jobid, name, user, nodelist = line.split(' ', 3)
-        yield int(jobid), name, user, nodelist
-
-def slurm_master_host():
-    cur_user = getpass.getuser()
-    for jobid, name, user, nodelist in slurm_jobinfo():
-        if name == JOB_MASTER and user == cur_user:
-            assert '[' not in nodelist
-            return nodelist
-    assert False, 'no master job found'
