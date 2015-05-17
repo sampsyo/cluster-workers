@@ -75,6 +75,20 @@ For testing and small jobs, you may want to run a cluster-workers program on a
 single multiprocessor machine. The included ``mp.py`` script works like
 ``slurm.py`` but starts the master and workers on the local machine.
 
+Using with Docker
+------------------------
+Slurm mode now has the option to run cluster workers as `Docker`_ containers. Use the following command-line arguments to specify how to run:
+
+* ``--docker-image <image/tag>``: the name of the docker image to use (if unspecified, docker will not be invoked)
+* ``--docker-args "..."``: arguments to pass to ``docker run``. In particular, you must mount the shared filesystem that cluster-workers uses for logging output.
+
+The Docker image must have python and cluster-workers installed, and must specify the python executable as its "entrypoint". For an example, see this `Dockerfile`_.
+
+.. _Docker: http://www.docker.com
+.. _Dockerfile: https://github.com/bholt/vm/blob/master/cluster-worker/Dockerfile
+
+Note that when run in a cluster environment, it may take some time for each node to pull the specified docker image the first time, so the worker jobs may take a while to fire up. But subsequent runs should be quite quick.
+
 Author
 ------
 
