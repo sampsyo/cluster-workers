@@ -13,6 +13,7 @@ import getpass
 DEFAULT_WORKERS = 32
 DOCKER = {}
 
+
 def sbatch(job):
     """Submits a Slurm job represented as a sbatch script string. Returns
     the job ID.
@@ -27,6 +28,7 @@ def sbatch(job):
 
     jobid = re.search(r'job (\d+)', out).group(1)
     return int(jobid)
+
 
 def startjob(command, name=None, options=()):
     """Start a Slurm job and return the job ID."""
@@ -43,12 +45,14 @@ def startjob(command, name=None, options=()):
 
     return sbatch('\n'.join(script_lines))
 
+
 def scancel(jobid, signal='INT'):
     """Cancel a Slurm job given its ID.
     """
     subprocess.check_call(
         ['scancel', '-s', signal, str(jobid)]
     )
+
 
 def get_jobid(jobname):
     """Given a job name, return the ID of a job belonging to this user
@@ -59,19 +63,24 @@ def get_jobid(jobname):
         if name == jobname and user == cur_user:
             return jobid
 
+
 def start_workers(num=2, options=()):
     if DOCKER['image']:
-        command = "docker run -i --rm --net=host {} {} -m cw.worker {}".format(DOCKER['args'], DOCKER['image'], cw.slurm_master_host())
+        command = "docker run -i --rm --net=host {} {} -m cw.worker {}".format(
+            DOCKER['args'], DOCKER['image'], cw.slurm_master_host()
+        )
     else:
         command = "{} -m cw.worker --slurm".format(sys.executable)
     options = ['--ntasks={}'.format(num)] + options
     return startjob(command, cw.JOB_WORKERS, options)
+
 
 def start_master(options=()):
     """Start a job for the master process. Return the Slurm job ID.
     """
     command = "{} -m cw.master".format(sys.executable)
     return startjob(command, cw.JOB_MASTER, options)
+
 
 def start(nworkers, master=True, workers=True, master_options=(),
           worker_options=()):
@@ -89,6 +98,7 @@ def start(nworkers, master=True, workers=True, master_options=(),
         jobid = start_workers(nworkers, worker_options)
         print('worker job', jobid, 'started')
 
+
 def stop(master=True, workers=True):
     # Workers.
     worker_jobid = get_jobid(cw.JOB_WORKERS)
@@ -102,6 +112,7 @@ def stop(master=True, workers=True):
     if master_jobid:
         print('stopping master')
         scancel(master_jobid)
+
 
 def cli():
     parser = argparse.ArgumentParser(
@@ -124,7 +135,7 @@ def cli():
     )
     parser.add_argument(
         '-d', '--docker-image', dest='docker_image', type=str, default=None,
-        help='if specified, will run cluster workers with the given docker image'
+        help='run workers with in a docker image'
     )
     parser.add_argument(
         '--docker-args', dest='docker_args', type=str, default=None,
@@ -147,12 +158,12 @@ def cli():
     args = parser.parse_args()
 
     DOCKER['image'] = args.docker_image
-    DOCKER['args']  = args.docker_args
+    DOCKER['args'] = args.docker_args
 
     worker_options = args.worker_options
     if args.isolated:
         worker_options.append('--ntasks-per-node=1')
-    
+
     if args.action == 'start':
         start(args.nworkers, args.master, args.workers,
               args.master_options, worker_options)
@@ -160,6 +171,7 @@ def cli():
         stop(args.master, args.workers)
     else:
         parser.error('action must be stop or start')
+
 
 if __name__ == '__main__':
     cli()
