@@ -11,7 +11,6 @@ import cw
 import getpass
 
 DEFAULT_WORKERS = 32
-DOCKER = {}
 
 
 def sbatch(job):
@@ -64,10 +63,10 @@ def get_jobid(jobname):
             return jobid
 
 
-def start_workers(num=2, options=()):
-    if DOCKER['image']:
+def start_workers(num=2, options=(), docker_image=None, docker_args=""):
+    if docker_image:
         command = "docker run -i --rm --net=host {} {} -m cw.worker {}".format(
-            DOCKER['args'], DOCKER['image'], cw.slurm_master_host()
+            docker_args, docker_image, cw.slurm_master_host()
         )
     else:
         command = "{} -m cw.worker --slurm".format(sys.executable)
@@ -83,7 +82,7 @@ def start_master(options=()):
 
 
 def start(nworkers, master=True, workers=True, master_options=(),
-          worker_options=()):
+          worker_options=(), docker_image=None, docker_args=""):
     # Master.
     if master:
         print('starting master')
@@ -95,7 +94,8 @@ def start(nworkers, master=True, workers=True, master_options=(),
     # Workers.
     if workers:
         print('starting {} workers'.format(nworkers))
-        jobid = start_workers(nworkers, worker_options)
+        jobid = start_workers(nworkers, worker_options,
+                              docker_image, docker_args)
         print('worker job', jobid, 'started')
 
 
@@ -157,16 +157,14 @@ def cli():
     )
     args = parser.parse_args()
 
-    DOCKER['image'] = args.docker_image
-    DOCKER['args'] = args.docker_args
-
     worker_options = args.worker_options
     if args.isolated:
         worker_options.append('--ntasks-per-node=1')
 
     if args.action == 'start':
         start(args.nworkers, args.master, args.workers,
-              args.master_options, worker_options)
+              args.master_options, worker_options,
+              args.docker_image, args.docker_args)
     elif args.action == 'stop':
         stop(args.master, args.workers)
     else:
