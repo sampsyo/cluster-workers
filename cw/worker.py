@@ -6,10 +6,12 @@ import sys
 import os
 from contextlib import contextmanager
 
+
 def format_remote_exc():
     typ, value, tb = sys.exc_info()
     tb = tb.tb_next  # Remove root call to worker().
     return ''.join(traceback.format_exception(typ, value, tb))
+
 
 @contextmanager
 def chdir(d):
@@ -17,6 +19,7 @@ def chdir(d):
     os.chdir(d)
     yield
     os.chdir(olddir)
+
 
 def amend_path():
     # This ridiculous bit of hackery ensures that the modules under the
@@ -26,6 +29,7 @@ def amend_path():
     # possible to find that path. Absolute-ifying the package path makes
     # it relocatable.
     cw.__path__ = map(os.path.abspath, cw.__path__)
+
 
 class Worker(object):
     def __init__(self, host='localhost', port=cw.PORT):
@@ -73,6 +77,7 @@ class Worker(object):
             bluelet.run(self.communicate())
         except KeyboardInterrupt:
             pass
+
 
 if __name__ == '__main__':
     args = sys.argv[1:]

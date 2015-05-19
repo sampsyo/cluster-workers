@@ -2,6 +2,7 @@ from __future__ import print_function
 import cw
 import bluelet
 
+
 class Master(object):
     def __init__(self):
         self.queued_tasks = []  # (TaskMessage, client connection) pairs
@@ -50,6 +51,7 @@ class Master(object):
 
     def run(self):
         bluelet.run(bluelet.server('', cw.PORT, self.communicate))
+
 
 if __name__ == '__main__':
     Master().run()

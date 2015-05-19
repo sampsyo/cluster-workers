@@ -3,21 +3,22 @@ from cloud import serialization
 import bluelet
 import marshal
 import random
-import subprocess
-import getpass
 
 PORT = 5494
 # Some random bytes to separate messages.
 SENTINEL = b'\x8d\xa9 \xee\x01\xe6B\xec\xaa\n\xe1A:\x15\x8d\x1b'
 
+
 def randid():
     return random.getrandbits(128)
+
 
 def lru_cache(size=128):
     """Function decorator that memoizes results in-memory.
     """
     def decorator(func):
         cache = OrderedDict()
+
         def wrapper(*args, **kwargs):
             key = (args, tuple(sorted(kwargs.items())))
             if key in cache:
@@ -33,6 +34,7 @@ def lru_cache(size=128):
                     # Eviction.
                     del cache[cache.iterkeys().next()]
                 return result
+
         return wrapper
     return decorator
 
@@ -43,13 +45,16 @@ def slow_ser(obj):
     """Serialize a complex object (like a closure)."""
     return serialization.serialize(obj, True)
 
+
 def slow_deser(blob):
     """Deserialize a complex object."""
     return serialization.deserialize(blob)
 
+
 @lru_cache()
 def func_ser(obj):
     return slow_ser(obj)
+
 
 @lru_cache()
 def func_deser(blob):
@@ -58,14 +63,21 @@ def func_deser(blob):
 
 # Messages.
 
-TaskMessage = namedtuple('TaskMessage',
-    ['jobid', 'func_blob', 'args_blob', 'kwargs_blob', 'cwd'])
+TaskMessage = namedtuple(
+    'TaskMessage',
+    ['jobid', 'func_blob', 'args_blob', 'kwargs_blob', 'cwd']
+)
 
-ResultMessage = namedtuple('ResultMessage',
-    ['jobid', 'success', 'result_blob'])
+
+ResultMessage = namedtuple(
+    'ResultMessage',
+    ['jobid', 'success', 'result_blob']
+)
+
 
 class WorkerRegisterMessage(object):
     pass
+
 
 class WorkerDepartMessage(object):
     pass
@@ -82,6 +94,7 @@ def _msg_ser(msg):
     else:
         assert False
 
+
 def _msg_deser(text):
     if text in (WorkerRegisterMessage.__name__, WorkerDepartMessage.__name__):
         typ = globals()[text]
@@ -91,8 +104,10 @@ def _msg_deser(text):
         typ = globals()[typename]
         return typ(*vals)
 
+
 def _sendmsg(conn, obj):
     yield conn.sendall(_msg_ser(obj) + SENTINEL)
+
 
 def _readmsg(conn):
     data = yield conn.readline(SENTINEL)
@@ -104,4 +119,3 @@ def _readmsg(conn):
     data = data[:-len(SENTINEL)]
     obj = _msg_deser(data)
     yield bluelet.end(obj)
-

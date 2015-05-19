@@ -5,6 +5,7 @@ import threading
 import concurrent.futures
 import os
 
+
 class Client(object):
     def __init__(self, host='localhost', port=cw.PORT):
         self.host = host
@@ -35,6 +36,7 @@ class Client(object):
         )
         yield cw._sendmsg(self.conn, task)
 
+
 class BaseClientThread(threading.Thread, Client):
     def __init__(self, callback, host='localhost', port=cw.PORT):
         threading.Thread.__init__(self)
@@ -56,7 +58,7 @@ class BaseClientThread(threading.Thread, Client):
     def main_coro(self):
         handler = self.handle_results(self.callback)
         yield bluelet.spawn(handler)
-        
+
         # Poll for thread shutdown.
         while True:
             yield bluelet.sleep(1)
@@ -66,7 +68,7 @@ class BaseClientThread(threading.Thread, Client):
 
         # Halt the handler thread.
         yield bluelet.kill(handler)
-    
+
     def stop(self):
         with self.shutdown_lock:
             self.shutdown = True
@@ -82,12 +84,14 @@ class BaseClientThread(threading.Thread, Client):
                 self.ready_condition.wait()
         bluelet.run(self.send_job(jobid, func, *args, **kwargs))
 
+
 class RemoteException(Exception):
     def __init__(self, error):
         self.error = error
 
     def __str__(self):
         return '\n' + self.error.strip()
+
 
 class ClientThread(BaseClientThread):
     """A slightly nicer ClientThread that generates job IDs for you and
@@ -129,6 +133,7 @@ class ClientThread(BaseClientThread):
                 self.remote_exception = None
                 raise exc
 
+
 class ClusterExecutor(concurrent.futures.Executor):
     def __init__(self, host='localhost', port=cw.PORT):
         self.thread = BaseClientThread(self._completion, host, port)
@@ -169,9 +174,11 @@ class ClusterExecutor(concurrent.futures.Executor):
         self.thread.stop()
         self.thread.join()
 
+
 class SlurmExecutor(ClusterExecutor):
     def __init__(self):
         super(SlurmExecutor, self).__init__(cw.slurm_master_host())
+
 
 def test():
     def square(n):
@@ -180,6 +187,7 @@ def test():
     with ClusterExecutor() as executor:
         for res in executor.map(square, range(1000)):
             print(res)
+
 
 if __name__ == '__main__':
     test()

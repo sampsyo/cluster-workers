@@ -18,16 +18,16 @@ def work(n):
 
 
 def main():
-    
+
     # If you wish to start a worker cluster just for this script, you
     # can do so with a command like this. See the slurm module for
-    # more info on the available options. 
+    # more info on the available options.
     #
-    # Note: If you are running multiple cluster-workers scripts, be 
+    # Note: If you are running multiple cluster-workers scripts, be
     # careful with this because only one set of master/workers can be
     # running at a time.
     cw.slurm.start(nworkers=2)
-    
+
     # Set up the client, connecting to the mast host. Replace the second
     # argument below with 'localhost' if you want to connect to a local
     # (i.e., development) cluster.
@@ -46,8 +46,8 @@ def main():
     # the results of all of our work before shutting down the
     # interpreter.
     client.wait()
-    
-    # If you started the worker cluster programmatically above, you 
+
+    # If you started the worker cluster programmatically above, you
     # can safely shut down the cluster workers. This will free up the
     # nodes.
     cw.slurm.stop()
