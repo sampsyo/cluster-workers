@@ -62,7 +62,7 @@ The ``slurm.py`` script lets you run SLURM jobs for your master and workers.
 Just run ``./slurm.py -n NWORKERS start`` to kick off a master job and a bunch
 of worker jobs.
 
-Then, use ``cw.slurm_master_host()`` in your client programs to automatically
+Then, use ``cw.slurm.master_host()`` in your client programs to automatically
 find the host of the master to connect to. Pass this to the ``ClientThread``
 constructor.
 
