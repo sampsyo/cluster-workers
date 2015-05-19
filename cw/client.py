@@ -4,6 +4,7 @@ import bluelet
 import threading
 import concurrent.futures
 import os
+import sys
 
 
 class Client(object):
@@ -33,6 +34,7 @@ class Client(object):
             jobid,
             cw.func_ser(func), cw.slow_ser(args), cw.slow_ser(kwargs),
             os.getcwd(),
+            sys.path,
         )
         yield cw._sendmsg(self.conn, task)
 

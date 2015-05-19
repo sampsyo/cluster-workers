@@ -65,7 +65,7 @@ def func_deser(blob):
 
 TaskMessage = namedtuple(
     'TaskMessage',
-    ['jobid', 'func_blob', 'args_blob', 'kwargs_blob', 'cwd']
+    ['jobid', 'func_blob', 'args_blob', 'kwargs_blob', 'cwd', 'syspath']
 )
 
 

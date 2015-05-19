@@ -15,10 +15,25 @@ def format_remote_exc():
 
 @contextmanager
 def chdir(d):
+    """Enter a directory for the duration of the context manager.
+    """
     olddir = os.getcwd()
     os.chdir(d)
     yield
     os.chdir(olddir)
+
+
+@contextmanager
+def extend_path(dirs):
+    """Extend sys.path with some new directories (at the front of the
+    list) for the duration of the context manager.
+    """
+    old_syspath = list(sys.path)
+    for entry in dirs:
+        if entry not in sys.path:
+            sys.path.insert(0, entry)
+    yield
+    sys.path = old_syspath
 
 
 def amend_path():
@@ -54,10 +69,11 @@ class Worker(object):
 
                 try:
                     with chdir(msg.cwd):
-                        func = cw.func_deser(msg.func_blob)
-                        args = cw.slow_deser(msg.args_blob)
-                        kwargs = cw.slow_deser(msg.kwargs_blob)
-                        res = func(*args, **kwargs)
+                        with extend_path(msg.syspath):
+                            func = cw.func_deser(msg.func_blob)
+                            args = cw.slow_deser(msg.args_blob)
+                            kwargs = cw.slow_deser(msg.kwargs_blob)
+                            res = func(*args, **kwargs)
                 except:
                     res = format_remote_exc()
                     response = cw.ResultMessage(msg.jobid, False,

@@ -52,6 +52,24 @@ data because of the way futures must persist in memory.
 .. _concurrent.futures:
     http://docs.python.org/dev/library/concurrent.futures.html
 
+A Consistent Environment
+''''''''''''''''''''''''
+
+The infrastructure tries to make it as seamless as possible to execute code
+remotely by replicating your local environment on the remote machine.
+Specifically:
+
+* You can send a closure; captured values will be included in the remote
+  context (thanks to `the old PiCloud library`_).
+* The code is executed on the worker using the same working directory as the
+  client. (This assumes the remote machines have a shared filesystem.)
+* The Python search path, ``sys.path``, is extended on the worker to match the
+  client's. (Again, this assumes a shared filesystem.) This makes it possible
+  to, for example, run tasks that use libraries inside of a `virtualenv`_.
+
+.. _virtualenv: https://pypi.python.org/pypi/virtualenv
+.. _the old PiCloud library: https://pypi.python.org/pypi/cloud
+
 Using With SLURM
 ----------------
 
