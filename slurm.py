@@ -7,7 +7,7 @@ import subprocess
 import sys
 import time
 import argparse
-import cw
+import cw.slurm
 import getpass
 
 DEFAULT_WORKERS = 32
