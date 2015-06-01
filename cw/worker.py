@@ -99,7 +99,8 @@ if __name__ == '__main__':
     args = sys.argv[1:]
 
     if args and args[0] == '--slurm':
-        host = cw.slurm_master_host()
+        import cw.slurm
+        host = cw.slurm.master_host()
     elif args:
         host = args[0]
     else:
