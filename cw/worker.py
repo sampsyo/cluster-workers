@@ -1,5 +1,6 @@
 from __future__ import print_function
 import cw
+import cw.slurm
 import bluelet
 import traceback
 import sys
@@ -99,7 +100,6 @@ if __name__ == '__main__':
     args = sys.argv[1:]
 
     if args and args[0] == '--slurm':
-        import cw.slurm
         host = cw.slurm.master_host()
     elif args:
         host = args[0]
