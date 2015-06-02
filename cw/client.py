@@ -1,5 +1,6 @@
 from __future__ import print_function
 import cw
+import cw.slurm
 import bluelet
 import threading
 import concurrent.futures
@@ -178,8 +179,9 @@ class ClusterExecutor(concurrent.futures.Executor):
 
 
 class SlurmExecutor(ClusterExecutor):
+    
     def __init__(self):
-        super(SlurmExecutor, self).__init__(cw.slurm_master_host())
+        super(SlurmExecutor, self).__init__(cw.slurm.master_host())
 
 
 def test():
