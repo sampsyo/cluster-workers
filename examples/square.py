@@ -27,12 +27,16 @@ def main():
     # Note: If you are running multiple cluster-workers scripts, be
     # careful with this because only one set of master/workers can be
     # running at a time.
-    cw.slurm.start(nworkers=2)
+    #
+    # This example shows how to launch workers locally on a multi-
+    # processor. To instead launch on a cluster using slurm, change
+    # the command below to `cw.slurm.start(nworkers=2)`
+    cw.mp.start(nworkers=2)
 
-    # Set up the client, connecting to the mast host. Replace the second
-    # argument below with 'localhost' if you want to connect to a local
-    # (i.e., development) cluster.
-    client = cw.client.ClientThread(completion, cw.slurm.master_host())
+    # Set up the client, connecting to the master host. Replace the
+    # second argument with `cw.slurm.master_host()` if using slurm to 
+    # launch the workers.
+    client = cw.client.ClientThread(completion, 'localhost')
     client.start()
 
     # Submit a bunch of work.
@@ -49,9 +53,11 @@ def main():
     client.wait()
 
     # If you started the worker cluster programmatically above, you
-    # can safely shut down the cluster workers. This will free up the
-    # nodes.
-    cw.slurm.stop()
+    # can safely shut down the cluster workers here.
+    # 
+    # If using slurm, change to `cw.slurm.stop()`, which will free
+    # up the allocated nodes.
+    cw.mp.stop()
 
 if __name__ == '__main__':
     main()
