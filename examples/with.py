@@ -1,5 +1,4 @@
 import cw.client
-import cw.mp
 
 
 def completion(jobid, output):
@@ -15,7 +14,7 @@ def main():
     # workers for this task (as opposed to an explicit `start` and
     # `stop`). You can choose from `cw.mp.allocate`,
     # `cw.slurm.allocate`, and `cw.allocate` to choose automatically.
-    with cw.mp.allocate(nworkers=2):
+    with cw.allocate(nworkers=2):
         client = cw.client.ClientThread(completion)
         client.start()
 
