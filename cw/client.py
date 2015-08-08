@@ -9,7 +9,13 @@ import sys
 
 
 class Client(object):
-    def __init__(self, host='localhost', port=cw.PORT):
+    def __init__(self, host=None, port=cw.PORT):
+        # if no host specified, then auto-detect if slurm should be used
+        if host is None:
+            if cw.is_slurm_available():
+                host = cw.slurm.master_host()
+            else:
+                host = 'localhost'
         self.host = host
         self.port = port
 
@@ -41,7 +47,7 @@ class Client(object):
 
 
 class BaseClientThread(threading.Thread, Client):
-    def __init__(self, callback, host='localhost', port=cw.PORT):
+    def __init__(self, callback, host=None, port=cw.PORT):
         threading.Thread.__init__(self)
         Client.__init__(self, host, port)
         self.callback = callback
@@ -100,7 +106,7 @@ class ClientThread(BaseClientThread):
     """A slightly nicer ClientThread that generates job IDs for you and
     raises exceptions when things go wrong on the remote side.
     """
-    def __init__(self, callback, host='localhost', port=cw.PORT):
+    def __init__(self, callback, host=None, port=cw.PORT):
         super(ClientThread, self).__init__(self._completion, host, port)
         self.app_callback = callback
 
@@ -138,7 +144,7 @@ class ClientThread(BaseClientThread):
 
 
 class ClusterExecutor(concurrent.futures.Executor):
-    def __init__(self, host='localhost', port=cw.PORT):
+    def __init__(self, host=None, port=cw.PORT):
         self.thread = BaseClientThread(self._completion, host, port)
         self.thread.start()
 
@@ -179,7 +185,7 @@ class ClusterExecutor(concurrent.futures.Executor):
 
 
 class SlurmExecutor(ClusterExecutor):
-    
+
     def __init__(self):
         super(SlurmExecutor, self).__init__(cw.slurm.master_host())
 

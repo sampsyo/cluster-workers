@@ -1,14 +1,7 @@
 #!/usr/bin/env python
 from __future__ import print_function
-import re
-import os
-import tempfile
-import subprocess
-import sys
-import time
 import argparse
 import cw.slurm
-import getpass
 
 DEFAULT_WORKERS = 32
 
@@ -62,8 +55,8 @@ def cli():
 
     if args.action == 'start':
         cw.slurm.start(args.nworkers, args.master, args.workers,
-              args.master_options, worker_options,
-              args.docker_image, args.docker_args)
+                       args.master_options, worker_options,
+                       args.docker_image, args.docker_args)
     elif args.action == 'stop':
         cw.slurm.stop(args.master, args.workers)
     else:

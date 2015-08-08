@@ -5,12 +5,10 @@ import tempfile
 import subprocess
 import sys
 import time
-import argparse
-import cw
 import getpass
 
 
-JOB_MASTER ='cmaster'
+JOB_MASTER = 'cmaster'
 JOB_WORKERS = 'cworkers'
 
 
@@ -35,6 +33,7 @@ def master_host():
             assert '[' not in nodelist
             return nodelist
     assert False, 'no master job found'
+
 
 def _sbatch(job):
     """Submits a Slurm job represented as a sbatch script string. Returns
@@ -121,7 +120,7 @@ def start(nworkers, master=True, workers=True, master_options=[],
     if workers:
         print('starting {} workers'.format(nworkers))
         jobid = _start_workers(nworkers, worker_options,
-                              docker_image, docker_args)
+                               docker_image, docker_args)
         print('worker job', jobid, 'started')
 
 
