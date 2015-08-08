@@ -3,10 +3,51 @@ from cloud import serialization
 import bluelet
 import marshal
 import random
+import distutils.spawn
+import cw.mp
+import cw.slurm
+
 
 PORT = 5494
 # Some random bytes to separate messages.
 SENTINEL = b'\x8d\xa9 \xee\x01\xe6B\xec\xaa\n\xe1A:\x15\x8d\x1b'
+
+
+def is_slurm_available():
+    return distutils.spawn.find_executable('salloc') != None
+
+
+def start(nworkers, master=True, workers=True, master_options=[],
+          worker_options=[], docker_image=None, docker_args=""):
+    """
+    Start up a cluster of workers, with autodetect: uses Slurm
+    if available, otherwise defaults to launching all processes locally.
+    
+    - Only one cluster should be in operation at a given time 
+      (only one 'cmaster').
+    - If no docker_image is specified, docker will not be used.
+    - Note that in the case of using local processes, master_options 
+      and worker_options are ignored.
+    - To explicitly start an mp or slurm cluster (no auto-detect)
+      use the submodule versions: `cw.mp.start()` or `cw.slurm.start().
+    """
+    if is_slurm_available():
+        cw.slurm.start(nworkers, master, workers, master_options,
+                       worker_options, docker_image, docker_args)
+    else:
+        cw.mp.start(nworkers, master, workers)
+        
+
+def stop(master=True, workers=True):
+    """Stop the running of a cluster (shut down cmaster and all cworkers).
+       If slurm is available, this assumes slurm was used to start the
+       cluster. To explicitly stop mp or slurm cluster, use the submodule
+       versions: `cw.mp.stop()` or `cw.slurm.stop().
+    """
+    if is_slurm_available():
+        cw.slurm.stop(master, workers)
+    else:
+        cw.mp.stop(master, workers)
 
 
 def randid():

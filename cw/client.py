@@ -138,7 +138,14 @@ class ClientThread(BaseClientThread):
 
 
 class ClusterExecutor(concurrent.futures.Executor):
-    def __init__(self, host='localhost', port=cw.PORT):
+    def __init__(self, host=None, port=cw.PORT):
+        # if no host specified, then auto-detect if slurm should be used
+        if host == None:
+            if is_slurm_available():
+                host = cw.slurm.master_host()
+            else:
+                host = 'localhost'
+            
         self.thread = BaseClientThread(self._completion, host, port)
         self.thread.start()
 
