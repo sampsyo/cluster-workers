@@ -6,6 +6,7 @@ import subprocess
 import sys
 import time
 import getpass
+from contextlib import contextmanager
 
 
 JOB_MASTER = 'cmaster'
@@ -139,3 +140,15 @@ def stop(master=True, workers=True):
     if master_jobid:
         print('stopping master')
         _scancel(master_jobid)
+
+
+@contextmanager
+def allocate(nworkers, master=True, workers=True, master_options=[],
+             worker_options=[], docker_image=None, docker_args=""):
+    """A context manager that starts and stops an allocation consisting
+    of a master and workers as Slurm jobs.
+    """
+    start(nworkers, master, workers, master_options, worker_options,
+          docker_image, docker_args)
+    yield
+    stop(master, workers)

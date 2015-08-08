@@ -1,8 +1,8 @@
-#!/usr/bin/env python
 from __future__ import print_function
 import subprocess
 import sys
 import time
+from contextlib import contextmanager
 
 
 def ps():
@@ -58,3 +58,13 @@ def stop(master=True, workers=True):
         if master_pids:
             print('killing {} master'.format(len(master_pids)))
             kill(master_pids)
+
+
+@contextmanager
+def allocate(nworkers, master=True, workers=True):
+    """A context manager that starts and stops an allocation consisting
+    of a master and workers in local processes.
+    """
+    start(nworkers, master, workers)
+    yield
+    stop(master, workers)
