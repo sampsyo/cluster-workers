@@ -14,7 +14,7 @@ SENTINEL = b'\x8d\xa9 \xee\x01\xe6B\xec\xaa\n\xe1A:\x15\x8d\x1b'
 
 
 def is_slurm_available():
-    return distutils.spawn.find_executable('salloc') != None
+    return distutils.spawn.find_executable('salloc') is not None
 
 
 def start(nworkers, master=True, workers=True, master_options=[],
@@ -22,11 +22,10 @@ def start(nworkers, master=True, workers=True, master_options=[],
     """
     Start up a cluster of workers, with autodetect: uses Slurm
     if available, otherwise defaults to launching all processes locally.
-    
-    - Only one cluster should be in operation at a given time 
+    - Only one cluster should be in operation at a given time
       (only one 'cmaster').
     - If no docker_image is specified, docker will not be used.
-    - Note that in the case of using local processes, master_options 
+    - Note that in the case of using local processes, master_options
       and worker_options are ignored.
     - To explicitly start an mp or slurm cluster (no auto-detect)
       use the submodule versions: `cw.mp.start()` or `cw.slurm.start().
@@ -36,7 +35,7 @@ def start(nworkers, master=True, workers=True, master_options=[],
                        worker_options, docker_image, docker_args)
     else:
         cw.mp.start(nworkers, master, workers)
-        
+
 
 def stop(master=True, workers=True):
     """Stop the running of a cluster (shut down cmaster and all cworkers).

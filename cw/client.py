@@ -11,12 +11,11 @@ import sys
 class Client(object):
     def __init__(self, host=None, port=cw.PORT):
         # if no host specified, then auto-detect if slurm should be used
-        if host == None:
+        if host is None:
             if cw.is_slurm_available():
                 host = cw.slurm.master_host()
             else:
                 host = 'localhost'
-        
         self.host = host
         self.port = port
 

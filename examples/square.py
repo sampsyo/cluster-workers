@@ -32,13 +32,13 @@ def main():
     # job manager if it is available, but otherwise will launch workers
     # locally to take advantage of multi-core parallelism.
     #
-    # To bypass this auto-detect, use submodule versions: `cw.mp.start()` 
-    # to launch workers locally, or `cw.slurm.start()`. Additional 
+    # To bypass this auto-detect, use submodule versions: `cw.mp.start()`
+    # to launch workers locally, or `cw.slurm.start()`. Additional
     # arguments (such as which Slurm partition to use) can be passed to
     # `cw.start()` and they will be passed along if slurm is available.
     cw.start(nworkers=2)
 
-    # Set up the client, connecting to the master host. 
+    # Set up the client, connecting to the master host.
     # If no host is specified (as here), it will will guess which host
     # to use (e.g. if slurm is available, it will use `cw.slurm.master_host()`,
     # otherwise it will default to `localhost` for MP mode.
@@ -60,7 +60,7 @@ def main():
 
     # If you started the worker cluster programmatically above, you
     # can safely shut down the cluster workers here.
-    # 
+    #
     # This will use the same auto-detection mechanism to determine
     # how to shutdown. To explicitly stop a slurm cluster, for example,
     # use `cw.slurm.stop()`, which will free up the allocated nodes.
