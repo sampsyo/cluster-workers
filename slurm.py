@@ -1,14 +1,7 @@
 #!/usr/bin/env python
 from __future__ import print_function
-import re
-import os
-import tempfile
-import subprocess
-import sys
-import time
 import argparse
 import cw.slurm
-import getpass
 
 DEFAULT_WORKERS = 32
 

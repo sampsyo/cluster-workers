@@ -1,5 +1,6 @@
 import cw.client
 import cw.slurm
+import cw.mp
 
 
 def completion(jobid, output):

@@ -5,12 +5,10 @@ import tempfile
 import subprocess
 import sys
 import time
-import argparse
-import cw
 import getpass
 
 
-JOB_MASTER ='cmaster'
+JOB_MASTER = 'cmaster'
 JOB_WORKERS = 'cworkers'
 
 
