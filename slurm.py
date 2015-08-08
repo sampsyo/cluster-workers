@@ -55,8 +55,8 @@ def cli():
 
     if args.action == 'start':
         cw.slurm.start(args.nworkers, args.master, args.workers,
-              args.master_options, worker_options,
-              args.docker_image, args.docker_args)
+                       args.master_options, worker_options,
+                       args.docker_image, args.docker_args)
     elif args.action == 'stop':
         cw.slurm.stop(args.master, args.workers)
     else:

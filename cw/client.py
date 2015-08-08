@@ -179,7 +179,7 @@ class ClusterExecutor(concurrent.futures.Executor):
 
 
 class SlurmExecutor(ClusterExecutor):
-    
+
     def __init__(self):
         super(SlurmExecutor, self).__init__(cw.slurm.master_host())
 

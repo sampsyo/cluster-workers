@@ -34,6 +34,7 @@ def master_host():
             return nodelist
     assert False, 'no master job found'
 
+
 def _sbatch(job):
     """Submits a Slurm job represented as a sbatch script string. Returns
     the job ID.
@@ -119,7 +120,7 @@ def start(nworkers, master=True, workers=True, master_options=[],
     if workers:
         print('starting {} workers'.format(nworkers))
         jobid = _start_workers(nworkers, worker_options,
-                              docker_image, docker_args)
+                               docker_image, docker_args)
         print('worker job', jobid, 'started')
 
 
