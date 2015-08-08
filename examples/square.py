@@ -1,6 +1,3 @@
-import sys
-print(sys.path)
-
 import cw.client
 import cw.slurm
 import cw.mp

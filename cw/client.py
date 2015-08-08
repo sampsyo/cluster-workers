@@ -16,7 +16,7 @@ class Client(object):
                 host = cw.slurm.master_host()
             else:
                 host = 'localhost'
-        print('using host:', host)
+        
         self.host = host
         self.port = port
 
