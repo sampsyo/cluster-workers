@@ -15,16 +15,18 @@ def main():
     # `stop`). You can choose from `cw.mp.allocate`,
     # `cw.slurm.allocate`, and `cw.allocate` to choose automatically.
     with cw.allocate(nworkers=2):
-        client = cw.client.ClientThread(completion)
-        client.start()
 
-        # Submit a bunch of work.
-        for i in range(10):
-            jobid = cw.randid()
-            print(u'submitting job {} to square {}'.format(jobid, i))
-            client.submit(jobid, work, i)
+        # A second context manager creates a client for the cluster. You
+        # can use this independently of the cluster startup context if
+        # you, for example, want to spin up the cluster workers
+        # manually and keep them around for several clients.
+        with cw.client.ClientThread(completion) as client:
 
-        client.wait()
+            # Now submit the actual work.
+            for i in range(10):
+                jobid = cw.randid()
+                print(u'submitting job {} to square {}'.format(jobid, i))
+                client.submit(jobid, work, i)
 
 
 if __name__ == '__main__':

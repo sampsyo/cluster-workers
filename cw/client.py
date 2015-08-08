@@ -142,6 +142,17 @@ class ClientThread(BaseClientThread):
                 self.remote_exception = None
                 raise exc
 
+    def __enter__(self):
+        """Start the context by spinning up a thread.
+        """
+        self.start()
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        """Stop the context (i.e., call `wait`).
+        """
+        self.wait()
+
 
 class ClusterExecutor(concurrent.futures.Executor):
     def __init__(self, host=None, port=cw.PORT):
